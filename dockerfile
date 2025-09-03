@@ -16,18 +16,4 @@ WORKDIR /app
 COPY . .
 
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
-
-# Cache Laravel config/routes/views
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
-
-# Generate APP_KEY (optional — usually set in Railway env vars)
-# RUN php artisan key:generate --force
-
-# Expose port
-EXPOSE 8000
-
-# Start Laravel
-CMD php artisan serve --host=0.0.0.0 --port=$PORT
+RUN composer
