@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "framework": null,
+  "functions": {
+    "api/index.php": {
+      "runtime": "vercel-php@0.7.4",
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "routes": [
+    { "src": "/build/(.*)", "dest": "/public/build/$1" },
+    { "src": "/storage/(.*)", "dest": "/public/storage/$1" },
+    { "src": "/(.*)", "dest": "/api/index.php" }
+  ],
+  "buildCommand": "composer install --no-dev -o && php artisan config:cache && php artisan route:cache && php artisan view:cache && npm ci && npm run build",
+  "outputDirectory": "public"
+}
