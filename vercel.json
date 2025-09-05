@@ -14,6 +14,6 @@
     { "src": "/storage/(.*)", "dest": "/public/storage/$1" },
     { "src": "/(.*)", "dest": "/api/index.php" }
   ],
-  "buildCommand": "composer install --no-dev -o && php artisan config:cache && php artisan route:cache && php artisan view:cache && npm ci && npm run build",
+   "buildCommand": "npm ci && npm run build",
   "outputDirectory": "public"
 }
