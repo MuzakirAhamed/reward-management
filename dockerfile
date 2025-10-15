@@ -1,52 +1,31 @@
-# ===============================
-# Stage 1 - Build Frontend (Vite)
-# ===============================
-FROM node:18 AS frontend
-WORKDIR /app
+# Use official PHP image
+FROM php:8.2-fpm
 
-# Copy package files and install dependencies
-COPY package*.json ./
-RUN npm install
-
-# Copy all files and build the frontend
-COPY . .
-RUN npm run build
-
-
-# =======================================
-# Stage 2 - Backend (Laravel + PHP + Composer)
-# =======================================
-FROM php:8.2-fpm AS backend
-
-# Install required system packages and PHP extensions
+# Install system dependencies and PHP extensions
 RUN apt-get update && apt-get install -y \
-    git curl unzip libpng-dev libonig-dev libxml2-dev libzip-dev zip \
-    && docker-php-ext-install pdo pdo_mysql mbstring zip bcmath gd
+    git curl libpng-dev libonig-dev libxml2-dev libzip-dev unzip zip \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /var/www
 
-# Copy Laravel files (backend)
+# Copy composer files first
+COPY composer.json composer.lock ./
+
+# Install dependencies (no dev, optimize autoloader)
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader || true
+
+# Copy rest of the application
 COPY . .
 
-# Copy built frontend assets from Stage 1
-COPY --from=frontend /app/public/dist ./public/dist
-
-# Install Laravel dependencies (optimized for production)
-RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader
-
-# Fix permissions for Render’s environment
+# Fix permissions
 RUN chown -R www-data:www-data /var/www
 
-# Set environment to production
-ENV APP_ENV=production
-ENV APP_DEBUG=false
-
-# Expose port 8000 (Render listens here)
+# Expose port
 EXPOSE 8000
 
-# Run Laravel server (Render automatically maps this port)
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# Start Laravel server
+CMD php artisan serve --host=0.0.0.0 --port=8000
